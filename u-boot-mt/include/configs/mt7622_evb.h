@@ -555,12 +555,12 @@
 #if defined(MT7622_FPGA_BOARD)
 #define CONFIG_BOOTDELAY                    5
 #else
-#define CONFIG_BOOTDELAY                    3
+#define CONFIG_BOOTDELAY                    0
 #endif
 #define CONFIG_BOOTCOMMAND                  "No"
 #define CONFIG_CMD_BOOTMENU
 #define CONFIG_MENU
-#define CONFIG_MENU_SHOW
+/*#define CONFIG_MENU_SHOW*/
 #define CONFIG_MENU_ACTIVE_ENTRY            2
 
 #define ENV_BOOT_CMD0 \
@@ -601,7 +601,7 @@
 #define ENV_BOOT_CMD11 \
     "boot11=download_setting gpt;tftpboot ${loadaddr} ${gpt_filename};run wr_gpt\0"
 #define ENV_BOOT_CMD12 \
-    "boot12=mmc init; run boot_normal; bootm\0"
+    "boot12=run boot_normal; bootm\0"
 #define ENV_BOOT_CMD \
     ENV_BOOT_WRITE_IMAGE \
     ENV_BOOT_READ_IMAGE \
@@ -628,34 +628,47 @@
 	ENV_BOOT_CMD12
 
 #define ENV_BOOT_MENU \
-    "bootmenu_0=1. System Load Linux to SDRAM via TFTP.=run boot0\0" \
-    "bootmenu_1=2. System Load Linux Kernel then write to Flash via TFTP.=run boot1\0" \
+    "aload_fdt=fatload $device $partition $dtaddr ${bpi}/${board}/${service}/dtb/${fdt}\0" \
+    "aload_kernel=fatload $device $partition $kaddr ${bpi}/${board}/${service}/${kernel}\0" \
+    "aboot=bootm $kaddr - $dtaddr\0" \
+    "abootargs=setenv bootargs board=${board} console=${console} root=${root} service=${service} ${bootopts}\0" \
+    "bootopts=debug=7 initcall_debug=0 androidboot.hardware=mt7622 swiotlb=512\0" \
+    "bootmenu_0=1. Reload Bootmenu=run reloadmenu\0" \
+    "bootmenu_1=2. Load Kernel from TFTP.=run bootnet\0" \
     "bootmenu_2=3. Boot Linux from SD.=run boot12\0" \
-    "bootmenu_3=4. System Load U-Boot then write to Flash via TFTP.=run boot3\0" \
-    "bootmenu_4=5. System Load U-Boot then write to Flash via Serial.=run boot4\0" \
-    "bootmenu_5=6. System Load ATF then write to Flash via TFTP.=run boot5\0" \
-    "bootmenu_6=7. System Load Preloader then write to Flash via TFTP.=run boot6\0" \
-    "bootmenu_7=8. System Load ROM header then write to Flash via TFTP.=run boot7\0" \
-    "bootmenu_8=9. System Load CTP then write to Flash via TFTP.=run boot8\0" \
-	"bootmenu_9=a. System Load CTP then Boot to CTP (via Flash).=run boot9\0" \
-	"bootmenu_10=b. System Load flashimage then write to Flash via TFTP.=run boot10\0" \
-	"bootmenu_11=c. System Load partition table then write to Flash via TFTP.=run boot11\0" \
     "bpiver=1\0" \
     "bpi=bananapi\0" \
     "board=bpi-r64\0" \
     "chip=MT7622\0" \
+    "console=ttyS0,115200n1 earlyprintk\0" \
+    "bootmenu_0=1. Reload Bootmenu=run reloadmenu\0" \
+    "bootmenu_1=2. Load Kernel from TFTP.=run bootnet\0" \
     "service=linux-4.19\0" \
     "scriptaddr=0x43000000\0" \
+    "kaddr=0x44000000\0" \
+    "dtaddr=0x47000000\0" \
     "device=mmc\0" \
     "partition=1:1\0" \
     "kernel=uImage\0" \
-    "root=/dev/mmcblk0p2\0" \
+    "fdt=mt7622-bananapi-r64.dtb\0" \
+    "root=/dev/mmcblk0p2 rootfstype=ext4 rootwait\0" \
     "debug=7\0" \
     "bootenv=uEnv.txt\0" \
-    "checksd=fatinfo ${device} 1:1\0" \
+    "checksd=mmc init;fatinfo ${device} 1:1\0" \
+    "ipaddr=192.168.0.18\0" \
+    "netmask=255.255.255.0\0" \
+    "serverip=192.168.0.10\0" \
+    "bootfile=uImage_r64\0" \
+    "bootdtbfile=r64.dtb\0" \
+    "netbootargs=console=ttyS0,115200 root=/dev/mmcblk0p2 rw rootwait ip=dhcp\0" \
     "loadbootenv=fatload ${device} ${partition} ${scriptaddr} ${bpi}/${board}/${service}/${bootenv} || fatload ${device} ${partition} ${scriptaddr} ${bootenv}\0" \
+    "reloadmenu=run loadenv; bootmenu;\0" \
+    "loadenv=if run checksd; then echo Boot from SD ; setenv partition 1:1; else echo Boot from eMMC ; mmc init 0 ; setenv partition 0:1;setenv root /dev/mmcblk1p2 ; fi; if run loadbootenv; then echo Loaded environment from ${bootenv}; env import -t ${scriptaddr} ${filesize}; fi;\0" \
     "boot_normal=if run checksd; then echo Boot from SD ; setenv partition 1:1; else echo Boot from eMMC ; mmc init 0 ; setenv partition 0:1 ; fi; if run loadbootenv; then echo Loaded environment from ${bootenv}; env import -t ${scriptaddr} ${filesize}; fi; run uenvcmd; fatload mmc 0:1 ${loadaddr} ${bpi}/${board}/${service}/${kernel}; bootm\0" \
-    "bootmenu_delay=30\0" \
+    "bootnet=setenv bootargs ${netbootargs};tftp $kaddr ${bootfile};tftp $dtaddr ${bootdtbfile};bootm $kaddr - $dtaddr\0" \
+    "uenvcmd=run abootargs aload_fdt aload_kernel aboot\0" \
+    "bootcmd=setenv bootdelay 5;run reloadmenu;\0" \
+    "bootmenu_delay=3\0" \
     ""
 #else
 
@@ -737,7 +750,7 @@
  **********************************************************************************************/
 /* Shell */
 #define CONFIG_SYS_MAXARGS		            32
-#define CONFIG_SYS_PROMPT		            "BPI-IoT> "
+#define CONFIG_SYS_PROMPT		            "BPI-R64> "
 #define CONFIG_COMMAND_HISTORY
 
 /* Commands */
@@ -768,5 +781,8 @@
  */
 #define CONFIG_LZMA                             
 #define CONFIG_MTGPIO
+
+#define CONFIG_AUTO_COMPLETE	1
+#define CONFIG_CMDLINE_EDITING	1
 
 #endif
