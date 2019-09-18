@@ -95,12 +95,13 @@ echo "This tool support following building mode(s):"
 echo "--------------------------------------------------------------------------------"
 echo "	1. Build all, uboot and kernel and pack to download images."
 echo "	2. Build uboot only."
-echo "	3. Build kernel only."
-echo "	4. kernel configure."
-echo "	5. Pack the builds to target download image, this step must execute after u-boot,"
+echo "	3. uboot configure."
+echo "	4. Build kernel only."
+echo "	5. kernel configure."
+echo "	6. Pack the builds to target download image, this step must execute after u-boot,"
 echo "	   kernel and rootfs build out"
-echo "	6. update files for SD"
-echo "	7. Clean all build."
+echo "	7. update files for SD"
+echo "	8. Clean all build."
 echo "--------------------------------------------------------------------------------"
 
 if [ -z "$MODE" ]; then
@@ -117,18 +118,20 @@ fi
 
 echo -e "\033[31m Now building...\033[0m"
 echo
+RET=1
 case $mode in
-	1) RET=1;make && 
+	1) make && 
 	   make pack && 
 	   cp_download_files &&
            RET=0
            ;;
-	2) make u-boot;;
-	3) make kernel;;
-	4) make kernel-config;;
-	5) make pack;;
-	6) cp_download_files;;
-	7) make clean;;
+	2) make u-boot&&RET=0;;
+	3) make u-boot-config&&RET=0;;
+	4) make kernel&&RET=0;;
+	5) make kernel-config&&RET=0;;
+	6) make pack&&RET=0;;
+	7) cp_download_files&&RET=0;;
+	8) make clean&&RET=0;;
 esac
 echo
 

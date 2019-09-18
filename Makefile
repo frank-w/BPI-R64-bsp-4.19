@@ -44,6 +44,9 @@ u-boot: $(U_CONFIG_H)
 u-boot-clean:
 	$(Q)$(MAKE) -C u-boot-mt CROSS_COMPILE=$(U_CROSS_COMPILE) -j$J distclean
 
+u-boot-config: $(K_DOT_CONFIG)
+	$(Q)$(MAKE) -C u-boot-mt CROSS_COMPILE=${K_CROSS_COMPILE} -j$J menuconfig
+
 ## linux
 $(K_DOT_CONFIG): linux-mt
 	$(Q)$(MAKE) -C linux-mt ARCH=arm64 $(KERNEL_CONFIG)
