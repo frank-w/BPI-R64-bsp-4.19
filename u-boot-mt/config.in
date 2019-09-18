@@ -217,9 +217,14 @@ if [ "$GE_RGMII_INTERNAL_P4_AN" = "y" -a "$CONFIG_USE_GE2" = "y" ]; then
     define_hex   MAC_TO_GIGAPHY_MODE_ADDR 0x4
 fi
 
-if [ "$CONFIG_GE1_SGMII_FORCE_2500" = "y" ]; then
-    define_bool CONFIG_RTL8367 y
-fi
+choice 'switch' "RTL8367s CONFIG_RTL8367  \
+	         MT7531 CONFIG_MT7531
+		" RTL8367s
+
+
+#if [ "$CONFIG_GE1_SGMII_FORCE_2500" = "y" ]; then
+#    define_bool CONFIG_RTL8367 y
+#fi
 
 fi
 
